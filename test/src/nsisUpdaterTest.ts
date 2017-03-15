@@ -167,6 +167,29 @@ test("file url github", async () => {
   expect(actualEvents).toEqual(expectedEvents)
 })
 
+test.skip("file url github private", async () => {
+  const updater = new NsisUpdater()
+  updater.updateConfigPath = await writeUpdateConfig(<GithubOptions>{
+      provider: "github",
+      owner: "develar",
+      repo: "__test_nsis_release_private",
+    })
+
+  const actualEvents: Array<string> = []
+  const expectedEvents = ["checking-for-update", "update-available", "update-downloaded"]
+  for (const eventName of expectedEvents) {
+    updater.addListener(eventName, () => {
+      actualEvents.push(eventName)
+    })
+  }
+
+  const updateCheckResult = await updater.checkForUpdates()
+  expect(updateCheckResult.fileInfo).toMatchSnapshot()
+  await assertThat(path.join(await updateCheckResult.downloadPromise)).isFile()
+
+  expect(actualEvents).toEqual(expectedEvents)
+})
+
 test("test error", async () => {
   const updater: NsisUpdater = new NsisUpdater()
 
@@ -180,7 +203,7 @@ test("test download progress", async () => {
   const updater = new NsisUpdater()
   updater.updateConfigPath = await writeUpdateConfig({
     provider: "generic",
-    url: "https://develar.s3.amazonaws.com/test",
+    url: "https://s3.amazonaws.com/test/develar",
   })
   updater.autoDownload = false
 

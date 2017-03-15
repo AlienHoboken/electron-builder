@@ -1,4 +1,4 @@
-import { Arch, Platform, Target } from "electron-builder-core"
+import { Arch, Platform, SourceRepositoryInfo, Target } from "electron-builder-core"
 import { CancellationToken } from "electron-builder-http/out/CancellationToken"
 import { PublishConfiguration } from "electron-builder-http/out/publishOptions"
 import { TmpDir } from "electron-builder-util/out/tmp"
@@ -7,7 +7,7 @@ import { AfterPackContext, Config, Metadata } from "./metadata"
 import { PlatformPackager } from "./platformPackager"
 
 export interface PackagerOptions {
-  targets?: Map<Platform, Map<Arch, string[]>>
+  targets?: Map<Platform, Map<Arch, Array<string>>>
 
   projectDir?: string | null
 
@@ -81,11 +81,4 @@ export interface ArtifactCreated {
   readonly safeArtifactName?: string
 
   readonly publishConfig?: PublishConfiguration
-}
-
-export interface SourceRepositoryInfo {
-  type: string
-  domain: string
-  user: string
-  project: string
 }

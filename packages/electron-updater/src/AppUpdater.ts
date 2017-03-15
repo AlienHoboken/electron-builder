@@ -1,4 +1,3 @@
-import "source-map-support/register"
 import BluebirdPromise from "bluebird-lst"
 import { executorHolder, RequestHeaders } from "electron-builder-http"
 import { CancellationToken } from "electron-builder-http/out/CancellationToken"
@@ -8,6 +7,7 @@ import { readFile } from "fs-extra-p"
 import { safeLoad } from "js-yaml"
 import * as path from "path"
 import { gt as isVersionGreaterThan, valid as parseVersion } from "semver"
+import "source-map-support/register"
 import { FileInfo, Provider, UpdateCheckResult, UpdaterSignal } from "./api"
 import { BintrayProvider } from "./BintrayProvider"
 import { ElectronHttpExecutor } from "./electronHttpExecutor"
@@ -29,6 +29,9 @@ export abstract class AppUpdater extends EventEmitter {
    */
   public autoDownload = true
 
+  /**
+   *  The request headers.
+   */
   public requestHeaders: RequestHeaders | null
 
   /**
@@ -116,6 +119,9 @@ export abstract class AppUpdater extends EventEmitter {
     this.clientPromise = BluebirdPromise.resolve(client)
   }
 
+  /**
+   * Asks the server whether there is an update.
+   */
   checkForUpdates(): Promise<UpdateCheckResult> {
     let checkForUpdatesPromise = this.checkForUpdatesPromise
     if (checkForUpdatesPromise != null) {
@@ -237,6 +243,13 @@ export abstract class AppUpdater extends EventEmitter {
 
   protected async abstract doDownloadUpdate(versionInfo: VersionInfo, fileInfo: FileInfo, cancellationToken: CancellationToken): Promise<any>
 
+  /**
+   * Restarts the app and installs the update after it has been downloaded. 
+   * It should only be called after `update-downloaded` has been emitted.
+   * 
+   * **Note:** `autoUpdater.quitAndInstall()` will close all application windows first and only emit `before-quit` event on `app` after that.
+   * This is different from the normal quit event sequence.
+   */
   abstract quitAndInstall(): void
 
   async loadUpdateConfig() {
@@ -244,6 +257,14 @@ export abstract class AppUpdater extends EventEmitter {
       this._appUpdateConfigPath = path.join(process.resourcesPath, "app-update.yml")
     }
     return safeLoad(await readFile(this._appUpdateConfigPath, "utf-8"))
+  }
+
+  protected computeRequestHeaders(fileInfo: FileInfo): RequestHeaders | null {
+    let requestHeaders = this.requestHeaders
+    if (fileInfo.headers != null) {
+      return requestHeaders == null ? fileInfo.headers : Object.assign({}, fileInfo.headers, requestHeaders)
+    }
+    return requestHeaders
   }
 }
 
@@ -255,11 +276,15 @@ function createClient(data: string | PublishConfiguration) {
   const provider = (<PublishConfiguration>data).provider
   switch (provider) {
     case "github":
-      if (process.env.GH_TOKEN != null) {
-        return new PrivateGitHubProvider(<GithubOptions>data)
-      } else {
-        return new GitHubProvider(<GithubOptions>data)
+      const githubOptions = <GithubOptions>data
+      const token = process.env.GH_TOKEN || githubOptions.token
+      if (token == null) {
+        return new GitHubProvider(githubOptions)
       }
+      else {
+        return new PrivateGitHubProvider(githubOptions, token)
+      }
+      
     case "s3": {
       const s3 = <S3Options>data
       return new GenericProvider({

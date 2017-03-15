@@ -4,7 +4,10 @@
     "outDir": "out"
   },
   "declaration": true,
-  "docs": "../../docs/Options.md",
+  "jsdoc": {
+    "out": "../../jsdoc/out/builder",
+    "examples": "../../jsdoc/examples"
+  },
   "include": [
     "src/**/*.ts",
     "../../typings/*.d.ts"

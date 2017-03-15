@@ -26,15 +26,7 @@ export class MacUpdater extends AppUpdater {
   }
 
   protected onUpdateAvailable(versionInfo: VersionInfo, fileInfo: FileInfo) {
-    if (fileInfo.headers != null) {
-      if (this.requestHeaders != null) {
-        Object.assign(fileInfo.headers, this.requestHeaders)
-      } else {
-        this.requestHeaders = fileInfo.headers
-      }
-    }
-
-    this.nativeUpdater.setFeedURL((<any>versionInfo).releaseJsonUrl, Object.assign({"Cache-Control": "no-cache"}, this.requestHeaders))
+    this.nativeUpdater.setFeedURL((<any>versionInfo).releaseJsonUrl, Object.assign({"Cache-Control": "no-cache"}, this.computeRequestHeaders(fileInfo)))
     super.onUpdateAvailable(versionInfo, fileInfo)
   }
 

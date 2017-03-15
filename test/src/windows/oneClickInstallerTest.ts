@@ -18,12 +18,10 @@ test("one-click", app({
       package: "TestApp",
     },
     nsis: {
-      unicode: false,
       deleteAppDataOnUninstall: true,
     },
   }
 }, {
-  useTempDir: true,
   signed: true,
   packed: async (context) => {
     await doTest(context.outDir, true)

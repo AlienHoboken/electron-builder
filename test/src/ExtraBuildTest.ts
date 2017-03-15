@@ -1,5 +1,5 @@
-import { DIR_TARGET, Platform } from "electron-builder"
-import { build, normalizeOptions } from "electron-builder/out/builder"
+import { Arch, DIR_TARGET, Platform } from "electron-builder"
+import { build } from "electron-builder/out/builder"
 import { move } from "fs-extra-p"
 import * as path from "path"
 import { assertThat } from "./helpers/fileAssert"
@@ -31,20 +31,67 @@ test.ifAll.ifNotWindows("custom buildResources and output dirs: mac", createBuil
 test.ifAll.ifNotCiMac("custom buildResources and output dirs: win", createBuildResourcesTest(Platform.WINDOWS))
 test.ifAll.ifNotWindows("custom buildResources and output dirs: linux", createBuildResourcesTest(Platform.LINUX))
 
-test.ifAll.ifDevOrLinuxCi("prepackaged", app({
+test.ifAll.ifLinuxOrDevMac("prepackaged", app({
   targets: linuxDirTarget,
 }, {
   packed: async (context) => {
-    await build(normalizeOptions({
+    await build({
       prepackaged: path.join(context.outDir, "linux-unpacked"),
       project: context.projectDir,
-      linux: ["deb"],
+      linux: [],
       config: {
+        // test target
+        linux: {
+          target: {
+            target: "deb",
+            arch: "ia32",
+          }
+        },
         compression: "store"
       }
-    }))
-    await assertThat(path.join(context.projectDir, "dist", "TestApp_1.1.0_amd64.deb")).isFile()
+    })
+    await assertThat(path.join(context.projectDir, "dist", "TestApp_1.1.0_i386.deb")).isFile()
   }
+}))
+
+test.ifAll.ifDevOrLinuxCi("override targets in the config", app({
+  targets: linuxDirTarget,
+}, {
+  packed: async (context) => {
+    await build({
+      projectDir: context.projectDir,
+      linux: ["deb"],
+      config: {
+        publish: null,
+        // https://github.com/electron-userland/electron-builder/issues/1355
+        linux: {
+          "target": [
+            "AppImage",
+            "deb",
+            "rpm"
+          ],
+        },
+        compression: "store"
+      }
+    })
+  }
+}))
+
+
+test.ifAll.ifDevOrWinCi("override targets in the config - only arch", app({
+  targets: Platform.WINDOWS.createTarget(null, Arch.ia32),
+  config: {
+    // https://github.com/electron-userland/electron-builder/issues/1348
+    win: {
+      target: [
+        "nsis",
+      ],
+    },
+  },
+}, {
+  packed: async (context) => {
+    await assertThat(path.join(context.projectDir, "dist", "win-unpacked")).doesNotExist()
+  },
 }))
 
 test.ifAll.ifDevOrLinuxCi("scheme validation", appThrows({
@@ -66,8 +113,11 @@ test.ifAll.ifDevOrLinuxCi("scheme validation 2", appThrows({
 
 // https://github.com/electron-userland/electron-builder/issues/1302
 test.ifAll.ifDevOrLinuxCi("scheme validation extraFiles", app({
-  targets: linuxDirTarget,
-  config: <any>{
+  targets: Platform.LINUX.createTarget([]),
+  config: {
+    linux: {
+      target: "zip:ia32",
+    },
     "extraFiles": [
       "lib/*.jar",
       "lib/Proguard/**/*",

@@ -58,7 +58,9 @@ But please consider using automatic rules instead of explicitly specifying `publ
 
 ## Publish Options
 
-[publish](#PublishConfiguration) can be specified in the [configuration options](https://github.com/electron-userland/electron-builder/wiki/Options#Config) or any platform- or target- specific options.
+See [GithubOptions](#GithubOptions), [S3Options](#S3Options), [BintrayOptions](#BintrayOptions).
+
+Can be specified in the [configuration options](https://github.com/electron-userland/electron-builder/wiki/Options#Config) or any platform- or target- specific options.
 
 ```json
 "win": {
@@ -67,64 +69,323 @@ But please consider using automatic rules instead of explicitly specifying `publ
 ```
 
 <!-- do not edit. start of generated block -->
-* [publish](#PublishConfiguration)
-* [publish Amazon S3](#S3Options)
-* [publish Bintray](#BintrayOptions)
-* [publish Generic (any HTTP(S) server)](#GenericServerOptions)
-* [publish GitHub](#GithubOptions)
+## API
 
-<a name="PublishConfiguration"></a>
-### `publish`
+<dl>
+<dt><a href="#module_electron-builder-http/out/publishOptions">electron-builder-http/out/publishOptions</a></dt>
+<dd></dd>
+<dt><a href="#module_electron-publish">electron-publish</a></dt>
+<dd></dd>
+</dl>
 
-Can be specified in the [config](https://github.com/electron-userland/electron-builder/wiki/Options#configuration-options) or any platform- or target- specific options.
+<a name="module_electron-builder-http/out/publishOptions"></a>
 
-If `GH_TOKEN` is set — defaults to `[{provider: "github"}]`.
-If `BT_TOKEN` is set and `GH_TOKEN` is not set — defaults to `[{provider: "bintray"}]`.
+## electron-builder-http/out/publishOptions
 
-Array of option objects. Order is important — first item will be used as a default auto-update server on Windows (NSIS).
-
-Amazon S3 — `https` must be used, so, if you use direct Amazon S3 endpoints, format `https://s3.amazonaws.com/bucket_name` [must be used](http://stackoverflow.com/a/11203685/1910191). And do not forget to make files/directories public.
-
-| Name | Description
-| --- | ---
-| **provider** | <a name="PublishConfiguration-provider"></a>The provider, one of `github`, `s3`, `bintray`, `generic`.
-| owner | <a name="PublishConfiguration-owner"></a>The owner.
-
-<a name="S3Options"></a>
-### `publish` Amazon S3
-
-[Getting your credentials](http://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-your-credentials.html).
-
-| Name | Description
-| --- | ---
-| **bucket** | <a name="S3Options-bucket"></a>The bucket name.
-| path | <a name="S3Options-path"></a>The directory path. Defaults to `/`.
-| channel | <a name="S3Options-channel"></a>The channel. Defaults to `latest`.
-| acl | <a name="S3Options-acl"></a>The ACL. Defaults to `public-read`.
-| storageClass | <a name="S3Options-storageClass"></a>The type of storage to use for the object. One of `STANDARD`, `REDUCED_REDUNDANCY`, `STANDARD_IA`. Defaults to `STANDARD`.
+* [electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)
+    * [`.BintrayOptions`](#BintrayOptions) ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+    * [`.GenericServerOptions`](#GenericServerOptions) ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+    * [`.GithubOptions`](#GithubOptions) ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+    * [`.PublishConfiguration`](#PublishConfiguration)
+    * [`.S3Options`](#S3Options) ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+    * [`.UpdateInfo`](#UpdateInfo) ⇐ <code>[VersionInfo](#VersionInfo)</code>
+    * [`.VersionInfo`](#VersionInfo)
+    * [`.githubUrl(options)`](#module_electron-builder-http/out/publishOptions.githubUrl) ⇒ <code>string</code>
+    * [`.s3Url(options)`](#module_electron-builder-http/out/publishOptions.s3Url) ⇒ <code>string</code>
 
 <a name="BintrayOptions"></a>
-### `publish` Bintray
-| Name | Description
-| --- | ---
-| package | <a name="BintrayOptions-package"></a>The Bintray package name.
-| repo | <a name="BintrayOptions-repo"></a>The Bintray repository name. Defaults to `generic`.
-| user | <a name="BintrayOptions-user"></a>The Bintray user account. Used in cases where the owner is an organization.
+
+### `BintrayOptions` ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+Bintray options.
+
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Extends**: <code>[PublishConfiguration](#PublishConfiguration)</code>  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| package| <code>string</code> \| <code>null</code> | <a name="BintrayOptions-package"></a>The Bintray package name. |
+| repo = <code>&quot;generic&quot;</code>| <code>string</code> \| <code>null</code> | <a name="BintrayOptions-repo"></a>The Bintray repository name. |
+| user| <code>string</code> \| <code>null</code> | <a name="BintrayOptions-user"></a>The Bintray user account. Used in cases where the owner is an organization. |
 
 <a name="GenericServerOptions"></a>
-### `publish` Generic (any HTTP(S) server)
-| Name | Description
-| --- | ---
-| **url** | <a name="GenericServerOptions-url"></a>The base url. e.g. `https://bucket_name.s3.amazonaws.com`. You can use `${os}` (expanded to `mac`, `linux` or `win` according to target platform) and `${arch}` macros.
-| channel | <a name="GenericServerOptions-channel"></a>The channel. Defaults to `latest`.
+
+### `GenericServerOptions` ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+Generic (any HTTP(S) server) options.
+
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Extends**: <code>[PublishConfiguration](#PublishConfiguration)</code>  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| **url**| <code>string</code> | <a name="GenericServerOptions-url"></a>The base url. e.g. `https://bucket_name.s3.amazonaws.com`. You can use `${os}` (expanded to `mac`, `linux` or `win` according to target platform) and `${arch}` macros. |
+| channel = <code>&quot;latest&quot;</code>| <code>string</code> \| <code>null</code> | <a name="GenericServerOptions-channel"></a>The channel. |
 
 <a name="GithubOptions"></a>
-### `publish` GitHub
-| Name | Description
-| --- | ---
-| repo | <a name="GithubOptions-repo"></a>The repository name. [Detected automatically](https://github.com/electron-userland/electron-builder/wiki/Publishing-Artifacts#github-repository).
-| vPrefixedTagName | <a name="GithubOptions-vPrefixedTagName"></a>Whether to use `v`-prefixed tag name. Defaults to `true`.
-| host | <a name="GithubOptions-host"></a>The host (including the port if need). Defaults to `github.com`.
-| protocol | <a name="GithubOptions-protocol"></a><p>The protocol, one of <code>https</code> or <code>http</code>. Defaults to <code>https</code>.</p> <p>GitHub Publisher supports only <code>https</code>.</p>
+
+### `GithubOptions` ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+GitHub options.
+
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Extends**: <code>[PublishConfiguration](#PublishConfiguration)</code>  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| repo| <code>string</code> \| <code>null</code> | <a name="GithubOptions-repo"></a>The repository name. [Detected automatically](#github-repository-and-bintray-package). |
+| vPrefixedTagName = <code>true</code>| <code>boolean</code> | <a name="GithubOptions-vPrefixedTagName"></a>Whether to use `v`-prefixed tag name. |
+| host = <code>&quot;github.com&quot;</code>| <code>string</code> \| <code>null</code> | <a name="GithubOptions-host"></a>The host (including the port if need). |
+| protocol = <code>https</code>| <code>"https"</code> \| <code>"http"</code> \| <code>null</code> | <a name="GithubOptions-protocol"></a>The protocol. GitHub Publisher supports only `https`. |
+| token| <code>string</code> \| <code>null</code> | <a name="GithubOptions-token"></a>The access token to support auto-update from private github repositories. Never specify it in the configuration files. Only for [setFeedURL](module:electron-updater/out/AppUpdater.AppUpdater+setFeedURL). |
+
+<a name="PublishConfiguration"></a>
+
+### `PublishConfiguration`
+Can be specified in the [config](https://github.com/electron-userland/electron-builder/wiki/Options#Config) or any platform- or target- specific options.
+
+If `GH_TOKEN` is set — defaults to `[{provider: "github"}]`.
+
+If `BT_TOKEN` is set and `GH_TOKEN` is not set — defaults to `[{provider: "bintray"}]`.
+
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| **provider**| <code>"github"</code> \| <code>"bintray"</code> \| <code>"s3"</code> \| <code>"generic"</code> | <a name="PublishConfiguration-provider"></a>The provider. |
+| owner| <code>string</code> \| <code>null</code> | <a name="PublishConfiguration-owner"></a>The owner. |
+| token| <code>string</code> \| <code>null</code> | <a name="PublishConfiguration-token"></a> |
+
+<a name="S3Options"></a>
+
+### `S3Options` ⇐ <code>[PublishConfiguration](#PublishConfiguration)</code>
+Amazon S3 options. `https` must be used, so, if you use direct Amazon S3 endpoints, format `https://s3.amazonaws.com/bucket_name` [must be used](http://stackoverflow.com/a/11203685/1910191). And do not forget to make files/directories public.
+
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Extends**: <code>[PublishConfiguration](#PublishConfiguration)</code>  
+**See**: [Getting your credentials](http://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-your-credentials.html).  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| **bucket**| <code>string</code> | <a name="S3Options-bucket"></a>The bucket name. |
+| path = <code>&quot;/&quot;</code>| <code>string</code> \| <code>null</code> | <a name="S3Options-path"></a>The directory path. |
+| channel = <code>&quot;latest&quot;</code>| <code>string</code> \| <code>null</code> | <a name="S3Options-channel"></a>The channel. |
+| acl = <code>public-read</code>| <code>"private"</code> \| <code>"public-read"</code> \| <code>null</code> | <a name="S3Options-acl"></a>The ACL. |
+| storageClass = <code>STANDARD</code>| <code>"STANDARD"</code> \| <code>"REDUCED_REDUNDANCY"</code> \| <code>"STANDARD_IA"</code> \| <code>null</code> | <a name="S3Options-storageClass"></a>The type of storage to use for the object. |
+
+<a name="UpdateInfo"></a>
+
+### `UpdateInfo` ⇐ <code>[VersionInfo](#VersionInfo)</code>
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Extends**: <code>[VersionInfo](#VersionInfo)</code>  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| **path**| <code>string</code> | <a name="UpdateInfo-path"></a> |
+| githubArtifactName| <code>string</code> \| <code>null</code> | <a name="UpdateInfo-githubArtifactName"></a> |
+| **sha2**| <code>string</code> | <a name="UpdateInfo-sha2"></a> |
+| releaseName| <code>string</code> \| <code>null</code> | <a name="UpdateInfo-releaseName"></a>The release name. |
+| releaseNotes| <code>string</code> \| <code>null</code> | <a name="UpdateInfo-releaseNotes"></a>The release notes. |
+| **releaseDate**| <code>string</code> | <a name="UpdateInfo-releaseDate"></a>The release date. |
+
+<a name="VersionInfo"></a>
+
+### `VersionInfo`
+**Kind**: interface of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| **version**| <code>string</code> | <a name="VersionInfo-version"></a>The version. |
+
+<a name="module_electron-builder-http/out/publishOptions.githubUrl"></a>
+
+### `electron-builder-http/out/publishOptions.githubUrl(options)` ⇒ <code>string</code>
+**Kind**: method of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+
+| Param | Type |
+| --- | --- |
+| options | <code>[GithubOptions](#GithubOptions)</code> | 
+
+<a name="module_electron-builder-http/out/publishOptions.s3Url"></a>
+
+### `electron-builder-http/out/publishOptions.s3Url(options)` ⇒ <code>string</code>
+**Kind**: method of <code>[electron-builder-http/out/publishOptions](#module_electron-builder-http/out/publishOptions)</code>  
+
+| Param | Type |
+| --- | --- |
+| options | <code>[S3Options](#S3Options)</code> | 
+
+<a name="module_electron-publish"></a>
+
+## electron-publish
+
+* [electron-publish](#module_electron-publish)
+    * [`.PublishContext`](#PublishContext)
+    * [`.PublishOptions`](#PublishOptions)
+    * [.HttpPublisher](#HttpPublisher) ⇐ <code>[Publisher](#Publisher)</code>
+        * [`.upload(file, safeArtifactName)`](#module_electron-publish.HttpPublisher+upload) ⇒ <code>Promise&lt;any&gt;</code>
+        * [`.uploadData(data, fileName)`](#module_electron-publish.HttpPublisher+uploadData) ⇒ <code>Promise&lt;any&gt;</code>
+        * [`.doUpload(fileName, dataLength, requestProcessor, file)`](#module_electron-publish.HttpPublisher+doUpload) ⇒ <code>Promise&lt;any&gt;</code>
+        * [`.toString()`](#module_electron-publish.Publisher+toString) ⇒ <code>string</code>
+        * [`.createProgressBar(fileName, fileStat)`](#module_electron-publish.Publisher+createProgressBar) ⇒ <code>null</code> &#124; <code>module:progress-ex.default</code>
+        * [`.createReadStreamAndProgressBar(file, fileStat, progressBar, reject)`](#module_electron-publish.Publisher+createReadStreamAndProgressBar) ⇒ <code>NodeJS:ReadableStream</code>
+    * [.Publisher](#Publisher)
+        * [`.toString()`](#module_electron-publish.Publisher+toString) ⇒ <code>string</code>
+        * [`.upload(file, safeArtifactName)`](#module_electron-publish.Publisher+upload) ⇒ <code>Promise&lt;any&gt;</code>
+        * [`.createProgressBar(fileName, fileStat)`](#module_electron-publish.Publisher+createProgressBar) ⇒ <code>null</code> &#124; <code>module:progress-ex.default</code>
+        * [`.createReadStreamAndProgressBar(file, fileStat, progressBar, reject)`](#module_electron-publish.Publisher+createReadStreamAndProgressBar) ⇒ <code>NodeJS:ReadableStream</code>
+
+<a name="PublishContext"></a>
+
+### `PublishContext`
+**Kind**: interface of <code>[electron-publish](#module_electron-publish)</code>  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| **cancellationToken**| <code>[CancellationToken](Developer-API#CancellationToken)</code> | 
+| **progress**| <code>[MultiProgress](Developer-API#MultiProgress)</code> \| <code>null</code> | 
+
+<a name="PublishOptions"></a>
+
+### `PublishOptions`
+**Kind**: interface of <code>[electron-publish](#module_electron-publish)</code>  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| publish| <code>"onTag"</code> \| <code>"onTagOrDraft"</code> \| <code>"always"</code> \| <code>"never"</code> \| <code>null</code> | 
+| draft| <code>boolean</code> | 
+| prerelease| <code>boolean</code> | 
+
+<a name="HttpPublisher"></a>
+
+### HttpPublisher ⇐ <code>[Publisher](#Publisher)</code>
+**Kind**: class of <code>[electron-publish](#module_electron-publish)</code>  
+**Extends**: <code>[Publisher](#Publisher)</code>  
+
+* [.HttpPublisher](#HttpPublisher) ⇐ <code>[Publisher](#Publisher)</code>
+    * [`.upload(file, safeArtifactName)`](#module_electron-publish.HttpPublisher+upload) ⇒ <code>Promise&lt;any&gt;</code>
+    * [`.uploadData(data, fileName)`](#module_electron-publish.HttpPublisher+uploadData) ⇒ <code>Promise&lt;any&gt;</code>
+    * [`.doUpload(fileName, dataLength, requestProcessor, file)`](#module_electron-publish.HttpPublisher+doUpload) ⇒ <code>Promise&lt;any&gt;</code>
+    * [`.toString()`](#module_electron-publish.Publisher+toString) ⇒ <code>string</code>
+    * [`.createProgressBar(fileName, fileStat)`](#module_electron-publish.Publisher+createProgressBar) ⇒ <code>null</code> &#124; <code>module:progress-ex.default</code>
+    * [`.createReadStreamAndProgressBar(file, fileStat, progressBar, reject)`](#module_electron-publish.Publisher+createReadStreamAndProgressBar) ⇒ <code>NodeJS:ReadableStream</code>
+
+<a name="module_electron-publish.HttpPublisher+upload"></a>
+
+#### `httpPublisher.upload(file, safeArtifactName)` ⇒ <code>Promise&lt;any&gt;</code>
+**Kind**: instance method of <code>[HttpPublisher](#HttpPublisher)</code>  
+**Overrides**: <code>[upload](#module_electron-publish.Publisher+upload)</code>  
+
+| Param | Type |
+| --- | --- |
+| file | <code>string</code> | 
+| safeArtifactName | <code>string</code> | 
+
+<a name="module_electron-publish.HttpPublisher+uploadData"></a>
+
+#### `httpPublisher.uploadData(data, fileName)` ⇒ <code>Promise&lt;any&gt;</code>
+**Kind**: instance method of <code>[HttpPublisher](#HttpPublisher)</code>  
+
+| Param | Type |
+| --- | --- |
+| data | <code>Buffer</code> | 
+| fileName | <code>string</code> | 
+
+<a name="module_electron-publish.HttpPublisher+doUpload"></a>
+
+#### `httpPublisher.doUpload(fileName, dataLength, requestProcessor, file)` ⇒ <code>Promise&lt;any&gt;</code>
+**Kind**: instance method of <code>[HttpPublisher](#HttpPublisher)</code>  
+**Access**: protected  
+
+| Param | Type |
+| --- | --- |
+| fileName | <code>string</code> | 
+| dataLength | <code>number</code> | 
+| requestProcessor | <code>callback</code> | 
+| file | <code>string</code> | 
+
+<a name="module_electron-publish.Publisher+toString"></a>
+
+#### `httpPublisher.toString()` ⇒ <code>string</code>
+**Kind**: instance method of <code>[HttpPublisher](#HttpPublisher)</code>  
+<a name="module_electron-publish.Publisher+createProgressBar"></a>
+
+#### `httpPublisher.createProgressBar(fileName, fileStat)` ⇒ <code>null</code> &#124; <code>module:progress-ex.default</code>
+**Kind**: instance method of <code>[HttpPublisher](#HttpPublisher)</code>  
+**Access**: protected  
+
+| Param | Type |
+| --- | --- |
+| fileName | <code>string</code> | 
+| fileStat | <code>module:fs.Stats</code> | 
+
+<a name="module_electron-publish.Publisher+createReadStreamAndProgressBar"></a>
+
+#### `httpPublisher.createReadStreamAndProgressBar(file, fileStat, progressBar, reject)` ⇒ <code>NodeJS:ReadableStream</code>
+**Kind**: instance method of <code>[HttpPublisher](#HttpPublisher)</code>  
+**Access**: protected  
+
+| Param | Type |
+| --- | --- |
+| file | <code>string</code> | 
+| fileStat | <code>module:fs.Stats</code> | 
+| progressBar | <code>module:progress-ex.default</code> &#124; <code>null</code> | 
+| reject | <code>callback</code> | 
+
+<a name="Publisher"></a>
+
+### Publisher
+**Kind**: class of <code>[electron-publish](#module_electron-publish)</code>  
+
+* [.Publisher](#Publisher)
+    * [`.toString()`](#module_electron-publish.Publisher+toString) ⇒ <code>string</code>
+    * [`.upload(file, safeArtifactName)`](#module_electron-publish.Publisher+upload) ⇒ <code>Promise&lt;any&gt;</code>
+    * [`.createProgressBar(fileName, fileStat)`](#module_electron-publish.Publisher+createProgressBar) ⇒ <code>null</code> &#124; <code>module:progress-ex.default</code>
+    * [`.createReadStreamAndProgressBar(file, fileStat, progressBar, reject)`](#module_electron-publish.Publisher+createReadStreamAndProgressBar) ⇒ <code>NodeJS:ReadableStream</code>
+
+<a name="module_electron-publish.Publisher+toString"></a>
+
+#### `publisher.toString()` ⇒ <code>string</code>
+**Kind**: instance method of <code>[Publisher](#Publisher)</code>  
+<a name="module_electron-publish.Publisher+upload"></a>
+
+#### `publisher.upload(file, safeArtifactName)` ⇒ <code>Promise&lt;any&gt;</code>
+**Kind**: instance method of <code>[Publisher](#Publisher)</code>  
+
+| Param | Type |
+| --- | --- |
+| file | <code>string</code> | 
+| safeArtifactName | <code>string</code> | 
+
+<a name="module_electron-publish.Publisher+createProgressBar"></a>
+
+#### `publisher.createProgressBar(fileName, fileStat)` ⇒ <code>null</code> &#124; <code>module:progress-ex.default</code>
+**Kind**: instance method of <code>[Publisher](#Publisher)</code>  
+**Access**: protected  
+
+| Param | Type |
+| --- | --- |
+| fileName | <code>string</code> | 
+| fileStat | <code>module:fs.Stats</code> | 
+
+<a name="module_electron-publish.Publisher+createReadStreamAndProgressBar"></a>
+
+#### `publisher.createReadStreamAndProgressBar(file, fileStat, progressBar, reject)` ⇒ <code>NodeJS:ReadableStream</code>
+**Kind**: instance method of <code>[Publisher](#Publisher)</code>  
+**Access**: protected  
+
+| Param | Type |
+| --- | --- |
+| file | <code>string</code> | 
+| fileStat | <code>module:fs.Stats</code> | 
+| progressBar | <code>module:progress-ex.default</code> &#124; <code>null</code> | 
+| reject | <code>callback</code> | 
+
 
 <!-- end of generated block -->

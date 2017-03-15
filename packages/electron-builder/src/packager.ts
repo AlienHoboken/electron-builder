@@ -1,5 +1,5 @@
 import BluebirdPromise from "bluebird-lst"
-import { Arch, Platform, Target } from "electron-builder-core"
+import { Arch, Platform, SourceRepositoryInfo, Target } from "electron-builder-core"
 import { CancellationToken } from "electron-builder-http/out/CancellationToken"
 import { computeDefaultAppDirectory, debug, exec, isEmptyOrSpaces, Lazy, use } from "electron-builder-util"
 import { deepAssign } from "electron-builder-util/out/deepAssign"
@@ -14,10 +14,10 @@ import { AppInfo } from "./appInfo"
 import { readAsarJson } from "./asar"
 import MacPackager from "./macPackager"
 import { AfterPackContext, Config, Metadata } from "./metadata"
-import { ArtifactCreated, BuildInfo, PackagerOptions, SourceRepositoryInfo } from "./packagerApi"
+import { ArtifactCreated, BuildInfo, PackagerOptions } from "./packagerApi"
 import { PlatformPackager } from "./platformPackager"
 import { getRepositoryInfo } from "./repositoryInfo"
-import { createTargets, NoOpTarget } from "./targets/targetFactory"
+import { computeArchToTargetNamesMap, createTargets, NoOpTarget } from "./targets/targetFactory"
 import { doLoadConfig, getElectronVersion, loadConfig, readPackageJson, validateConfig } from "./util/readPackageJson"
 import { WinPackager } from "./winPackager"
 import { getGypEnv, installOrRebuild } from "./yarn"
@@ -86,7 +86,7 @@ export class Packager implements BuildInfo {
     this.eventEmitter.emit("artifactCreated", event)
   }
 
-  async build(): Promise<Map<Platform, Map<String, Target>>> {
+  async build(): Promise<BuildResult> {
     //noinspection JSDeprecatedSymbols
     const devMetadataFromOptions = this.options.devMetadata
     if (devMetadataFromOptions != null) {
@@ -160,7 +160,11 @@ export class Packager implements BuildInfo {
 
     this.appInfo = new AppInfo(this.metadata, this)
     const cleanupTasks: Array<() => Promise<any>> = []
-    return await executeFinally(this.doBuild(cleanupTasks), () => all(cleanupTasks.map(it => it()).concat(this.tempDirManager.cleanup())))
+    const outDir = path.resolve(this.projectDir, use(this.config.directories, it => it!.output) || "dist")
+    return {
+      outDir: outDir,
+      platformToTargets: await executeFinally(this.doBuild(outDir, cleanupTasks), () => all(cleanupTasks.map(it => it()).concat(this.tempDirManager.cleanup())))
+    }
   }
 
   private async readProjectMetadata(appPackageFile: string, extraMetadata: any) {
@@ -190,12 +194,9 @@ export class Packager implements BuildInfo {
     }
   }
 
-  private async doBuild(cleanupTasks: Array<() => Promise<any>>): Promise<Map<Platform, Map<String, Target>>> {
+  private async doBuild(outDir: string, cleanupTasks: Array<() => Promise<any>>): Promise<Map<Platform, Map<String, Target>>> {
     const distTasks: Array<Promise<any>> = []
-    const outDir = path.resolve(this.projectDir, use(this.config.directories, it => it!.output) || "dist")
-
-    const platformToTarget: Map<Platform, Map<String, Target>> = new Map()
-
+    const platformToTarget = new Map<Platform, Map<String, Target>>()
     const createdOutDirs = new Set<string>()
 
     // custom packager - don't check wine
@@ -214,11 +215,11 @@ export class Packager implements BuildInfo {
         wineCheck = exec("wine", ["--version"])
       }
 
-      const helper = this.createHelper(platform, cleanupTasks)
+      const packager = this.createHelper(platform, cleanupTasks)
       const nameToTarget: Map<String, Target> = new Map()
       platformToTarget.set(platform, nameToTarget)
 
-      for (const [arch, targets] of archToType) {
+      for (const [arch, targetNames] of computeArchToTargetNamesMap(archToType, packager.platformSpecificBuildOptions, platform)) {
         if (this.cancellationToken.cancelled) {
           break
         }
@@ -234,7 +235,7 @@ export class Packager implements BuildInfo {
           await checkWineVersion(wineCheck)
         }
 
-        const targetList = createTargets(nameToTarget, targets, outDir, helper, cleanupTasks)
+        const targetList = createTargets(nameToTarget, targetNames.length === 0 ? packager.defaultTarget : targetNames, outDir, packager, cleanupTasks)
         const ourDirs = new Set<string>()
         for (const target of targetList) {
           if (!(target instanceof NoOpTarget) && !createdOutDirs.has(target.outDir)) {
@@ -249,7 +250,7 @@ export class Packager implements BuildInfo {
           })
         }
 
-        await helper.pack(outDir, arch, targetList, distTasks)
+        await packager.pack(outDir, arch, targetList, distTasks)
       }
 
       if (this.cancellationToken.cancelled) {
@@ -440,6 +441,9 @@ function checkConflictingOptions(options: any) {
   }
 }
 
+/**
+ * @private
+ */
 export async function checkWineVersion(checkPromise: Promise<string>) {
   function wineError(prefix: string): string {
     return `${prefix}, please see https://github.com/electron-userland/electron-builder/wiki/Multi-Platform-Build#${(process.platform === "linux" ? "linux" : "macos")}`
@@ -492,4 +496,9 @@ function checkDependencies(dependencies: { [key: string]: string } | null | unde
         + `Please remove it from the "dependencies" section in your package.json.`)
     }
   }
+}
+
+export interface BuildResult {
+  readonly outDir: string
+  readonly platformToTargets: Map<Platform, Map<String, Target>>
 }
