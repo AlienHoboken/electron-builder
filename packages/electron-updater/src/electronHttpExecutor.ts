@@ -56,11 +56,7 @@ export class ElectronHttpExecutor extends HttpExecutor<Electron.RequestOptions, 
 
 
   protected doRequest(options: any, callback: (response: any) => void): any {
-<<<<<<< HEAD
-    options.session = session.fromPartition('electron-updater')
-=======
     options.session = session.fromPartition(NET_SESSION_NAME)
->>>>>>> electron-userland/master
     return net.request(options, callback)
   }
 }
