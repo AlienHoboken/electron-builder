@@ -212,7 +212,7 @@ export function getCacheDirectory(): string {
   const localappdata = process.env.LOCALAPPDATA
   if (process.platform === "win32" && localappdata != null) {
     // https://github.com/electron-userland/electron-builder/issues/1164
-    if (localappdata.includes("\\Windows\\System32\\") || process.env.USERNAME === "SYSTEM") {
+    if (localappdata.toLowerCase().includes("\\windows\\system32\\") || (process.env.USERNAME || "").toLowerCase() === "system") {
       return path.join(tmpdir(), "electron-builder-cache")
     }
     return path.join(localappdata, "electron-builder", "cache")
@@ -304,4 +304,13 @@ export function isPullRequest() {
   }
 
   return isSet(process.env.TRAVIS_PULL_REQUEST) || isSet(process.env.CI_PULL_REQUEST) || isSet(process.env.CI_PULL_REQUESTS)
+}
+
+export function safeStringifyJson(data: any) {
+  return JSON.stringify(data, (name, value) => {
+    if (name.endsWith("Password") || name.endsWith("Token") || name.includes("password") || name.includes("token")) {
+      return "<stripped sensitive data>"
+    }
+    return value
+  }, 2)
 }

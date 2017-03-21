@@ -1,7 +1,7 @@
 import BluebirdPromise from "bluebird-lst"
 import { Arch, Platform, SourceRepositoryInfo, Target } from "electron-builder-core"
 import { CancellationToken } from "electron-builder-http/out/CancellationToken"
-import { computeDefaultAppDirectory, debug, exec, isEmptyOrSpaces, Lazy, use } from "electron-builder-util"
+import { computeDefaultAppDirectory, debug, exec, isEmptyOrSpaces, Lazy, safeStringifyJson, use } from "electron-builder-util"
 import { deepAssign } from "electron-builder-util/out/deepAssign"
 import { log, warn } from "electron-builder-util/out/log"
 import { all, executeFinally } from "electron-builder-util/out/promise"
@@ -38,7 +38,7 @@ export class Packager implements BuildInfo {
     return this._isPrepackedAppAsar
   }
 
-  private devMetadata: Metadata
+  devMetadata: Metadata
 
   private _config: Config
 
@@ -155,12 +155,7 @@ export class Packager implements BuildInfo {
 
     this.checkMetadata(appPackageFile, devPackageFile)
     
-    debug(`Effective config: ${JSON.stringify(this.config, (name, value) => {
-      if (name.endsWith("Password") || name.endsWith("Token") || name.includes("password") || name.includes("token")) {
-        return "<stripped sensitive data>"
-      }
-      return value
-    }, 2)}`)
+    debug(`Effective config: ${safeStringifyJson(this.config)}`)
     checkConflictingOptions(this.config)
 
     this.electronVersion = await getElectronVersion(this.config, projectDir, this.isPrepackedAppAsar ? this.metadata : null)
@@ -502,6 +497,10 @@ function checkDependencies(dependencies: { [key: string]: string } | null | unde
       errors.push(`Package "${name}" is only allowed in "devDependencies". `
         + `Please remove it from the "dependencies" section in your package.json.`)
     }
+  }
+  if ("electron-compile" in dependencies) {
+    warn(`Package "electron-compile" should be in "devDependencies". `
+      + `Please remove it from the "dependencies" section in your package.json. Please see https://github.com/electron/electron-compile/issues/207`)
   }
 }
 
